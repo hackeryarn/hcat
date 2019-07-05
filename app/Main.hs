@@ -1,6 +1,12 @@
 module Main where
 
+import qualified Data.Text as Text
+import qualified Data.Text.IO as Text
 import System.Environment (getArgs)
 
 main :: IO ()
-main = (head <$> getArgs) >>= readFile >>= putStrLn
+main =
+  let fname = (head <$> getArgs)
+  in fname
+  >>= readFile
+  >>= putStrLn
