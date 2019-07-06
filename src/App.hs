@@ -31,3 +31,12 @@ boundryOffset idx text =
   if Text.index text idx == ' '
     then Just idx
     else boundryOffset (pred idx) text
+
+type MyApp = ReaderT Cfg
+
+newtype AppT m a = AppT
+  { runAppT :: MyApp m a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader Cfg)
+
+runApp :: AppT m a -> Cfg -> m a
+runApp = runReaderT . runAppT

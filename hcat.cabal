@@ -49,6 +49,7 @@ executable hcat
                      , text
                      , hcat
                      , process
+                     , mtl
   default-language:    Haskell2010
 
 test-suite hcat-test
