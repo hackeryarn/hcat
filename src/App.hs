@@ -1,27 +1,34 @@
 module App where
+
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.Fail
+import System.Process as Process
+import Data.Text as Text
+import Data.Maybe as Maybe
 
--- | The AppT monad represents the application state
-newtype AppT m a = AppT
-  { runAppT :: ExceptT AppException (ReaderT Cfg m) a
-  } deriving (Functor,Applicative,Monad,MonadIO,MonadReader Cfg, MonadError AppException)
-
-raiseAppException :: (Monad m, MonadFail m) => Either AppException a -> m a
-raiseAppException = \case
-  Left err -> Control.Monad.Fail.fail . show $ err
-  Right a -> return a
-
-runApp :: (Monad m, MonadFail m) => Cfg -> AppT m a -> m a
-runApp cfg =
-  (>>= raiseAppException) . flip runReaderT cfg . runExceptT . runAppT
-
--- | Add exception types here
-data AppException = GeneralException String deriving (Eq, Show)
-
--- | Cfg contains the configured state of the application
 data Cfg = Cfg
+  { cfgTermWidth :: Int
+  , cfgTermHeight :: Int
+  } deriving (Show)
 
-defaultConfig :: Cfg
-defaultConfig = Cfg
+defaultConfig :: IO Cfg
+defaultConfig = do
+  height <- Process.readProcess "tput" ["lines"] ""
+  width <- Process.readProcess "tput" ["cols"] ""
+  return $ Cfg {cfgTermHeight = read height, cfgTermWidth = read width}
+
+wordWrap :: Int -> Text.Text -> [Text.Text]
+wordWrap w txt =
+  if Text.length txt < w
+    then [txt]
+    else let myOffset = Maybe.fromMaybe w (boundryOffset w txt)
+             (thisLine, rest) = Text.splitAt myOffset txt
+          in thisLine : wordWrap w rest
+
+boundryOffset :: Int -> Text.Text -> Maybe Int
+boundryOffset 0 _ = Nothing
+boundryOffset idx text =
+  if Text.index text idx == ' '
+    then Just idx
+    else boundryOffset (pred idx) text
