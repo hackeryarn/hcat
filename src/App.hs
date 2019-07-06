@@ -1,11 +1,11 @@
 module App where
 
 import Control.Monad.Except
-import Control.Monad.Reader
 import Control.Monad.Fail
-import System.Process as Process
-import Data.Text as Text
+import Control.Monad.Reader
 import Data.Maybe as Maybe
+import Data.Text as Text
+import System.Process as Process
 
 data Cfg = Cfg
   { cfgTermWidth :: Int
@@ -13,10 +13,9 @@ data Cfg = Cfg
   } deriving (Show)
 
 defaultConfig :: IO Cfg
-defaultConfig = do
-  height <- Process.readProcess "tput" ["lines"] ""
-  width <- Process.readProcess "tput" ["cols"] ""
-  return $ Cfg {cfgTermHeight = read height, cfgTermWidth = read width}
+defaultConfig = Cfg <$> term "lines" <*> term "cols"
+  where
+    term cmd = read <$> Process.readProcess "tput" [cmd] ""
 
 wordWrap :: Int -> Text.Text -> [Text.Text]
 wordWrap w txt =
