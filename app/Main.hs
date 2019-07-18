@@ -8,5 +8,5 @@ main :: IO ()
 main =
   let fname = (head <$> getArgs)
   in fname
-  >>= readFile
-  >>= putStrLn
+  >>= Text.readFile
+  >>= Text.putStrLn
